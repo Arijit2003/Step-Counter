@@ -36,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Boolean sensorActivation=false;
     int currentStep;
     int previousStep=0;
-    int totalStep;
+    int totalStep=0;
 
     ActivityResultLauncher<String> activityRecognizerResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), new ActivityResultCallback<Boolean>() {
         @Override
@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         startStop=findViewById(R.id.startStop);
         sensorManager=(SensorManager) getSystemService(SENSOR_SERVICE);
         if(sensorManager!=null){
-            stepCounterSensor=sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+            stepCounterSensor=sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         }
         retrieveFromSharedPreferences();
 
@@ -154,10 +154,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(sensorEvent.sensor.getType()==Sensor.TYPE_STEP_COUNTER){
+        if(sensorEvent.sensor.getType()==Sensor.TYPE_STEP_DETECTOR){
 
-            currentStep= (int) sensorEvent.values[0];
-            totalStep=currentStep-previousStep;
+//            currentStep= (int) sensorEvent.values[0];
+//            totalStep=currentStep-previousStep;
+            totalStep++;
             String values=""+totalStep+"";
             stepsTV.setText(values);
             circularProgressBar.setProgress((float) totalStep);
@@ -184,8 +185,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void storeInSharedPreferences(){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-        editor.putInt("currentStep", currentStep);
-        editor.putInt("previousStep",previousStep);
+//        editor.putInt("currentStep", currentStep);
+//        editor.putInt("previousStep",previousStep);
+        editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Integer.parseInt(setGoalTV.getText().toString()));
         editor.apply();
 
@@ -193,40 +195,47 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @SuppressLint("SetTextI18n")
     public void retrieveFromSharedPreferences(){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
-        if(sp.contains("currentStep")){
-            currentStep=sp.getInt("currentStep",-1);
-            previousStep=sp.getInt("previousStep",-1);
+        if(sp.contains("TOTAL_STEPS")){
+//            currentStep=sp.getInt("currentStep",-1);
+//            previousStep=sp.getInt("previousStep",-1);
 
+            totalStep=sp.getInt("TOTAL_STEPS",-1);
             setGoalTV.setText(""+sp.getInt("setGoal",2600)+"");
-            circularProgressBar.setProgress((float)(currentStep-previousStep));
+            circularProgressBar.setProgress((float)(totalStep));
             circularProgressBar.setProgressMax((float) sp.getInt("setGoal",2600));
-            stepsTV.setText(""+(currentStep-previousStep)+"");
+            stepsTV.setText(""+(totalStep)+"");
         }
     }
     @SuppressLint("SetTextI18n")
     public void resetData(){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-        previousStep=currentStep;
-        editor.putInt("currentStep",currentStep);
-        editor.putInt("previousStep",previousStep);
+//        previousStep=currentStep;
+//        editor.putInt("currentStep",currentStep);
+//        editor.putInt("previousStep",previousStep);
+        totalStep=0;
+        editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",2600);
         editor.apply();
-        circularProgressBar.setProgress((float) (currentStep-previousStep));
-        stepsTV.setText(""+(int)(currentStep-previousStep)+"");
+        circularProgressBar.setProgress((float) (totalStep));
+        circularProgressBar.setProgressMax((float) 2600);
+        stepsTV.setText(""+(int)(totalStep)+"");
         setGoalTV.setText("2600");
     }
     @SuppressLint("SetTextI18n")
     public void resetData(int Goal){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-        previousStep=currentStep;
-        editor.putInt("currentStep",currentStep);
-        editor.putInt("previousStep",previousStep);
+//        previousStep=currentStep;
+//        editor.putInt("currentStep",currentStep);
+//        editor.putInt("previousStep",previousStep);
+        totalStep=0;
+        editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Goal);
         editor.apply();
-        circularProgressBar.setProgress((float) (currentStep-previousStep));
-        stepsTV.setText(""+(int)(currentStep-previousStep)+"");
+        circularProgressBar.setProgress((float) (totalStep));
+        circularProgressBar.setProgressMax((float) Goal);
+        stepsTV.setText(""+(int)(totalStep)+"");
         setGoalTV.setText(""+Goal+"");
     }
 }
