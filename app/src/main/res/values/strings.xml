@@ -6,4 +6,8 @@
     <string name="stop">STOP</string>
     <string name="goal">Enter your goal</string>
     <string name="save">Save</string>
+    <string name="steps">STEPS</string>
+    <string name="km">0 </string>
+    <string name="cal">0</string>
+    <string name="time">0</string>
 </resources>

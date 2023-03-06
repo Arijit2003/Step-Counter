@@ -4,6 +4,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -81,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().setNavigationBarColor(ContextCompat.getColor(this,R.color.black));
+        getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
 
         initialize();
 
@@ -161,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             totalStep++;
             String values=""+totalStep+"";
             stepsTV.setText(values);
-            circularProgressBar.setProgress((float) totalStep);
+            circularProgressBar.setProgressWithAnimation((float) totalStep);
         }
     }
 
@@ -201,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
             totalStep=sp.getInt("TOTAL_STEPS",-1);
             setGoalTV.setText(""+sp.getInt("setGoal",2600)+"");
-            circularProgressBar.setProgress((float)(totalStep));
+            circularProgressBar.setProgressWithAnimation((float)(totalStep));
             circularProgressBar.setProgressMax((float) sp.getInt("setGoal",2600));
             stepsTV.setText(""+(totalStep)+"");
         }
@@ -217,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",2600);
         editor.apply();
-        circularProgressBar.setProgress((float) (totalStep));
+        circularProgressBar.setProgressWithAnimation((float) (totalStep));
         circularProgressBar.setProgressMax((float) 2600);
         stepsTV.setText(""+(int)(totalStep)+"");
         setGoalTV.setText("2600");
@@ -233,7 +236,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Goal);
         editor.apply();
-        circularProgressBar.setProgress((float) (totalStep));
+        circularProgressBar.setProgressWithAnimation((float) (totalStep));
         circularProgressBar.setProgressMax((float) Goal);
         stepsTV.setText(""+(int)(totalStep)+"");
         setGoalTV.setText(""+Goal+"");
