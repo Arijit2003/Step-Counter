@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Step Counter</string>
+    <string name="zero">0</string>
+    <string name="setYourGoal">2600</string>
+    <string name="start">START</string>
+    <string name="stop">STOP</string>
+    <string name="goal">Enter your goal</string>
+    <string name="save">Save</string>
+</resources>
