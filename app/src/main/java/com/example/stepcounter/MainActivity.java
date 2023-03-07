@@ -4,6 +4,7 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
@@ -18,14 +19,18 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.tv.TvContentRating;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.os.SystemClock;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+import java.text.DecimalFormat;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
     CircularProgressBar circularProgressBar;
@@ -35,48 +40,48 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     SensorManager sensorManager;
     Sensor stepCounterSensor;
     Boolean sensorActivation=false;
-    int currentStep;
-    int previousStep=0;
     int totalStep=0;
+    TextView distance;
+    Chronometer timeInMinChrono;
+    ConstraintLayout constraintLayout;
+    private long pauseOffSet;
 
     ActivityResultLauncher<String> activityRecognizerResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), new ActivityResultCallback<Boolean>() {
         @Override
         public void onActivityResult(Boolean result) {
             if(result){
-
                 String state;
                 if(sensorActivation){
                     sensorActivation=false;
                     state="START";
                     startStop.setText(state);
                     storeInSharedPreferences();
-
+                    //chronometer
+                    timeInMinChrono.stop();
+                    pauseOffSet=SystemClock.elapsedRealtime()-timeInMinChrono.getBase();
                     if(stepCounterSensor!=null){
                         sensorManager.unregisterListener(MainActivity.this,stepCounterSensor);
                     }
-
                 }
                 else{
                     sensorActivation=true;
                     state="STOP";
                     startStop.setText(state);
-
+                    //chronometer
+                    timeInMinChrono.setBase(SystemClock.elapsedRealtime()-pauseOffSet);
+                    timeInMinChrono.start();
                     if(stepCounterSensor!=null){
-
                         sensorManager.registerListener(MainActivity.this,stepCounterSensor,SensorManager.SENSOR_DELAY_NORMAL);
                     }
 
                 }
-
-
-
-
             }
             else{
                 showAlertDialog("Permission Denied","So the app can't recognize your activity");
             }
         }
     });
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,30 +92,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         initialize();
 
-
         setGoalTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 openTheDialog();
             }
         });
+
         startStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 activityRecognizerResultLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION);
-
             }
         });
 
         stepsTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                resetData();
+                Toast.makeText(MainActivity.this, "Tap long to reset", Toast.LENGTH_SHORT).show();
             }
         });
-
-
+        stepsTV.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                resetData();
+                return false;
+            }
+        });
 
     }
 
@@ -118,10 +126,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
     public void initialize(){
+        constraintLayout=findViewById(R.id.constraintLayout);
         circularProgressBar=findViewById(R.id.circularProgressBar);
         stepsTV=findViewById(R.id.stepsTV);
         setGoalTV=findViewById(R.id.setGoalTV);
         startStop=findViewById(R.id.startStop);
+        distance=findViewById(R.id.distance);
+        timeInMinChrono=findViewById(R.id.timeInMinChrono);
         sensorManager=(SensorManager) getSystemService(SENSOR_SERVICE);
         if(sensorManager!=null){
             stepCounterSensor=sensorManager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
@@ -129,6 +140,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         retrieveFromSharedPreferences();
 
     }
+
+
     public void openTheDialog(){
         Dialog dialog=new Dialog(this);
         dialog.setContentView(R.layout.set_goal_dialog);
@@ -155,24 +168,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     }
 
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
         if(sensorEvent.sensor.getType()==Sensor.TYPE_STEP_DETECTOR){
-
-//            currentStep= (int) sensorEvent.values[0];
-//            totalStep=currentStep-previousStep;
             totalStep++;
             String values=""+totalStep+"";
+            double distanceInKM= totalStep*2.4*0.3048/1000;
+            distance.setText(new DecimalFormat("##.##").format(distanceInKM));
             stepsTV.setText(values);
             circularProgressBar.setProgressWithAnimation((float) totalStep);
         }
     }
 
+
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
-    void showAlertDialog(String title,String message){
+
+
+    private void showAlertDialog(String title,String message){
         AlertDialog.Builder alertDialog=new AlertDialog.Builder(this);
         alertDialog.setTitle(title);
         alertDialog.setMessage(message);
@@ -185,38 +201,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         alertDialog.create();
         alertDialog.show();
     }
+
+
     public void storeInSharedPreferences(){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-//        editor.putInt("currentStep", currentStep);
-//        editor.putInt("previousStep",previousStep);
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Integer.parseInt(setGoalTV.getText().toString()));
         editor.apply();
 
     }
+
+
     @SuppressLint("SetTextI18n")
     public void retrieveFromSharedPreferences(){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         if(sp.contains("TOTAL_STEPS")){
-//            currentStep=sp.getInt("currentStep",-1);
-//            previousStep=sp.getInt("previousStep",-1);
-
             totalStep=sp.getInt("TOTAL_STEPS",-1);
+            double evaluateDist=totalStep*2.4*0.3048/1000;
+            distance.setText(new DecimalFormat("##.##").format(evaluateDist));
             setGoalTV.setText(""+sp.getInt("setGoal",2600)+"");
             circularProgressBar.setProgressWithAnimation((float)(totalStep));
             circularProgressBar.setProgressMax((float) sp.getInt("setGoal",2600));
             stepsTV.setText(""+(totalStep)+"");
+
         }
     }
+
+
     @SuppressLint("SetTextI18n")
     public void resetData(){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-//        previousStep=currentStep;
-//        editor.putInt("currentStep",currentStep);
-//        editor.putInt("previousStep",previousStep);
         totalStep=0;
+        distance.setText(new DecimalFormat("##.##").format(0.0));
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",2600);
         editor.apply();
@@ -224,21 +242,28 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         circularProgressBar.setProgressMax((float) 2600);
         stepsTV.setText(""+(int)(totalStep)+"");
         setGoalTV.setText("2600");
+        //Chronometer
+        timeInMinChrono.setBase(SystemClock.elapsedRealtime());
+        pauseOffSet=0;
     }
+
+
     @SuppressLint("SetTextI18n")
     public void resetData(int Goal){
         SharedPreferences sp=getSharedPreferences("STEP_RECORD",MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
-//        previousStep=currentStep;
-//        editor.putInt("currentStep",currentStep);
-//        editor.putInt("previousStep",previousStep);
         totalStep=0;
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Goal);
         editor.apply();
+
+        distance.setText(new DecimalFormat("##.##").format(0.0));
         circularProgressBar.setProgressWithAnimation((float) (totalStep));
         circularProgressBar.setProgressMax((float) Goal);
         stepsTV.setText(""+(int)(totalStep)+"");
         setGoalTV.setText(""+Goal+"");
+        //Chronometer
+        timeInMinChrono.setBase(SystemClock.elapsedRealtime());
+        pauseOffSet=0;
     }
 }
