@@ -76,6 +76,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if(stepCounterSensor!=null){
                         sensorManager.unregisterListener(MainActivity.this,stepCounterSensor);
                     }
+                    else {
+                        Toast.makeText(MainActivity.this, "Senor is not working", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 else{
                     sensorActivation=true;
@@ -86,6 +89,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     timeInMinChrono.start();
                     if(stepCounterSensor!=null){
                         sensorManager.registerListener(MainActivity.this,stepCounterSensor,SensorManager.SENSOR_DELAY_NORMAL);
+                    }
+                    else {
+                        Toast.makeText(MainActivity.this, "Sensor is not working", Toast.LENGTH_SHORT).show();
                     }
 
                 }
