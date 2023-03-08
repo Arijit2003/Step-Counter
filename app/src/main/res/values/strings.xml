@@ -11,4 +11,6 @@
     <string name="cal">0</string>
     <string name="time">0</string>
     <string name="next">Next</string>
+    <string name="kcal">kcal</string>
+    <string name="calo">cal</string>
 </resources>

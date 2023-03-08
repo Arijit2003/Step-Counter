@@ -111,10 +111,12 @@
                     app:drawableLeftCompat="@drawable/distance" />
 
                 <TextView
-                    android:id="@+id/textView2"
+                    android:id="@+id/calBurn"
                     android:layout_width="0dp"
                     android:layout_height="55dp"
                     android:text="@string/cal"
+                    android:clickable="true"
+
                     android:layout_weight="1"
                     android:textColor="#f2f2f2"
                     android:gravity="center_vertical"
@@ -122,9 +124,10 @@
                     android:paddingStart="15dp"
                     android:drawablePadding="25dp"
                     android:background="@drawable/text_view_border_background"
-                    app:drawableLeftCompat="@drawable/calories"
+                    app:drawableStartCompat="@drawable/calorie"
                     tools:ignore="RtlSymmetry"
-                    android:autoSizeTextType="uniform"/>
+                    android:autoSizeTextType="uniform"
+                    app:drawableEndCompat="@drawable/drop_down" />
 
             </LinearLayout>
 

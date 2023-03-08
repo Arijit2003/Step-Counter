@@ -4,6 +4,8 @@ import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 
@@ -13,6 +15,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.drawable.Drawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -21,15 +24,21 @@ import android.media.tv.TvContentRating;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.EditText;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.mikhaellopez.circularprogressbar.CircularProgressBar;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -44,7 +53,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     TextView distance;
     Chronometer timeInMinChrono;
     ConstraintLayout constraintLayout;
+    TextView calBurn;
     private long pauseOffSet;
+
+    double calories=0.0;
+    //1--KCAL &&  0--CAL
+    int energyFlag=0;
 
     ActivityResultLauncher<String> activityRecognizerResultLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(), new ActivityResultCallback<Boolean>() {
         @Override
@@ -95,7 +109,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setGoalTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Toast.makeText(MainActivity.this, "Long tap to set the goal", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        setGoalTV.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
                 openTheDialog();
+                return false;
             }
         });
 
@@ -120,6 +142,74 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        calBurn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                PopupMenu popupMenu=new PopupMenu(MainActivity.this,calBurn);
+                popupMenu.inflate(R.menu.walking_mode);
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @SuppressLint("UseCompatLoadingForDrawables")
+                    @Override
+                    public boolean onMenuItemClick(MenuItem menuItem) {
+                        switch (menuItem.getItemId()){
+                            case R.id.kcalMenuItem:{
+                                Drawable image=getDrawable(R.drawable.kilocalories);
+                                image.setBounds(0,0,image.getIntrinsicWidth(),image.getIntrinsicHeight());
+
+                                Drawable imageDropDown=getDrawable(R.drawable.drop_down);
+                                imageDropDown.setBounds(0,0,imageDropDown.getIntrinsicWidth(),imageDropDown.getIntrinsicHeight());
+
+                                calBurn.setCompoundDrawables(image,null,imageDropDown,null);
+                                Toast.makeText(MainActivity.this, "Energy unit: kcal", Toast.LENGTH_SHORT).show();
+                                popupMenu.dismiss();
+                                energyFlag=1;
+                                storeInSharedPreferences();
+                                break;
+                            }
+                            case R.id.calorieMenuItem:{
+                                Drawable image=getDrawable(R.drawable.calorie);
+                                image.setBounds(0,0,image.getIntrinsicWidth(),image.getIntrinsicHeight());
+
+                                Drawable imageDropDown=getDrawable(R.drawable.drop_down);
+                                imageDropDown.setBounds(0,0,imageDropDown.getIntrinsicWidth(),imageDropDown.getIntrinsicHeight());
+
+                                calBurn.setCompoundDrawables(image,null,imageDropDown,null);
+                                Toast.makeText(MainActivity.this, "Energy unit: cal", Toast.LENGTH_SHORT).show();
+                                popupMenu.dismiss();
+                                energyFlag=0;
+                                storeInSharedPreferences();
+                                break;
+                            }
+
+                        }
+
+                        return true;
+                    }
+                });
+                popupMenu.show();
+
+                //Below try catch block is used to force menu icon to appear with the text.
+                try {
+                    Field[] fields = popupMenu.getClass().getDeclaredFields();
+                    for (Field field : fields) {
+                        if ("mPopup".equals(field.getName())) {
+                            field.setAccessible(true);
+                            Object menuPopupHelper = field.get(popupMenu);
+                            Class<?> classPopupHelper = Class.forName(menuPopupHelper
+                                    .getClass().getName());
+                            Method setForceIcons = classPopupHelper.getMethod(
+                                    "setForceShowIcon", boolean.class);
+                            setForceIcons.invoke(menuPopupHelper, true);
+                            break;
+                        }
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
     }
 
 
@@ -132,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setGoalTV=findViewById(R.id.setGoalTV);
         startStop=findViewById(R.id.startStop);
         distance=findViewById(R.id.distance);
+        calBurn=findViewById(R.id.calBurn);
         timeInMinChrono=findViewById(R.id.timeInMinChrono);
         sensorManager=(SensorManager) getSystemService(SENSOR_SERVICE);
         if(sensorManager!=null){
@@ -175,6 +266,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             totalStep++;
             String values=""+totalStep+"";
             double distanceInKM= totalStep*2.4*0.3048/1000;
+            if(energyFlag==0) {
+                calories = distanceInKM * 62.1372;
+            }
+            else{
+                calories = distanceInKM * 62.1372/1000;
+            }
+            calBurn.setText(new DecimalFormat("##.##").format(calories));
             distance.setText(new DecimalFormat("##.##").format(distanceInKM));
             stepsTV.setText(values);
             circularProgressBar.setProgressWithAnimation((float) totalStep);
@@ -208,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         SharedPreferences.Editor editor = sp.edit();
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Integer.parseInt(setGoalTV.getText().toString()));
+        editor.putInt("ENERGY_FLAG",energyFlag);
         editor.apply();
 
     }
@@ -219,6 +318,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if(sp.contains("TOTAL_STEPS")){
             totalStep=sp.getInt("TOTAL_STEPS",-1);
             double evaluateDist=totalStep*2.4*0.3048/1000;
+            energyFlag=sp.getInt("ENERGY_FLAG",0);
+            if(energyFlag==0) {
+                calories = evaluateDist * 62.1372;
+
+                Drawable image=getDrawable(R.drawable.calorie);
+                image.setBounds(0,0,image.getIntrinsicWidth(),image.getIntrinsicHeight());
+                Drawable imageDropDown=getDrawable(R.drawable.drop_down);
+                imageDropDown.setBounds(0,0,imageDropDown.getIntrinsicWidth(),imageDropDown.getIntrinsicHeight());
+                calBurn.setCompoundDrawables(image,null,imageDropDown,null);
+            }
+            else{
+                calories = evaluateDist * 62.1372/1000;
+
+                Drawable image=getDrawable(R.drawable.kilocalories);
+                image.setBounds(0,0,image.getIntrinsicWidth(),image.getIntrinsicHeight());
+                Drawable imageDropDown=getDrawable(R.drawable.drop_down);
+                imageDropDown.setBounds(0,0,imageDropDown.getIntrinsicWidth(),imageDropDown.getIntrinsicHeight());
+                calBurn.setCompoundDrawables(image,null,imageDropDown,null);
+
+            }
+            calBurn.setText(new DecimalFormat("##.##").format(calories));
             distance.setText(new DecimalFormat("##.##").format(evaluateDist));
             setGoalTV.setText(""+sp.getInt("setGoal",2600)+"");
             circularProgressBar.setProgressWithAnimation((float)(totalStep));
@@ -237,7 +357,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         distance.setText(new DecimalFormat("##.##").format(0.0));
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",2600);
+        editor.putInt("ENERGY_FLAG",0);
         editor.apply();
+
+        Drawable image=getDrawable(R.drawable.calorie);
+        image.setBounds(0,0,image.getIntrinsicWidth(),image.getIntrinsicHeight());
+        Drawable imageDropDown=getDrawable(R.drawable.drop_down);
+        imageDropDown.setBounds(0,0,imageDropDown.getIntrinsicWidth(),imageDropDown.getIntrinsicHeight());
+        calBurn.setCompoundDrawables(image,null,imageDropDown,null);
+
         circularProgressBar.setProgressWithAnimation((float) (totalStep));
         circularProgressBar.setProgressMax((float) 2600);
         stepsTV.setText(""+(int)(totalStep)+"");
@@ -245,6 +373,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //Chronometer
         timeInMinChrono.setBase(SystemClock.elapsedRealtime());
         pauseOffSet=0;
+        calories=0.0;
+        calBurn.setText(new DecimalFormat("##.##").format(calories));
+        energyFlag=0;
+
     }
 
 
@@ -255,7 +387,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         totalStep=0;
         editor.putInt("TOTAL_STEPS",totalStep);
         editor.putInt("setGoal",Goal);
+        editor.putInt("ENERGY_FLAG",0);
         editor.apply();
+
+        Drawable image=getDrawable(R.drawable.calorie);
+        image.setBounds(0,0,image.getIntrinsicWidth(),image.getIntrinsicHeight());
+        Drawable imageDropDown=getDrawable(R.drawable.drop_down);
+        imageDropDown.setBounds(0,0,imageDropDown.getIntrinsicWidth(),imageDropDown.getIntrinsicHeight());
+        calBurn.setCompoundDrawables(image,null,imageDropDown,null);
 
         distance.setText(new DecimalFormat("##.##").format(0.0));
         circularProgressBar.setProgressWithAnimation((float) (totalStep));
@@ -265,5 +404,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //Chronometer
         timeInMinChrono.setBase(SystemClock.elapsedRealtime());
         pauseOffSet=0;
+        calories=0.0;
+        calBurn.setText(new DecimalFormat("##.##").format(calories));
+        energyFlag=0;
+
     }
 }
