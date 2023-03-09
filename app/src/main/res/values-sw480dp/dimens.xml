@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<resources>
+    <dimen name="dim_1">0.5dp</dimen>
+    <dimen name="dim_2">1dp</dimen>
+    <dimen name="dim_28">14dp</dimen>
+    <dimen name="dim_250">125dp</dimen>
+    <dimen name="dim_38">19dp</dimen>
+    <dimen name="dim_11">5.5dp</dimen>
+    <dimen name="dim_15">7.5dp</dimen>
+    <dimen name="dim_56">28dp</dimen>
+    <dimen name="dim_25">12.5dp</dimen>
+    <dimen name="dim_20">10dp</dimen>
+    <dimen name="dim_180">90dp</dimen>
+    <dimen name="dim_60">30dp</dimen>
+    <dimen name="dim_100">50dp</dimen>
+    <dimen name="dim_274">137dp</dimen>
+    <dimen name="dim_5">2.5dp</dimen>
+
+    <dimen name="font_size_10">5sp</dimen>
+    <dimen name="font_size_45">22.5sp</dimen>
+    <dimen name="font_size_22">11sp</dimen>
+    <dimen name="font_size_30">15sp</dimen>
+
+
+</resources>

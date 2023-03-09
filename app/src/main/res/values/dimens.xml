@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<resources>
+    <dimen name="dim_1">1dp</dimen>
+    <dimen name="dim_2">2dp</dimen>
+    <dimen name="dim_28">28dp</dimen>
+    <dimen name="dim_250">250dp</dimen>
+    <dimen name="dim_38">38dp</dimen>
+    <dimen name="dim_11">11dp</dimen>
+    <dimen name="dim_15">15dp</dimen>
+    <dimen name="dim_56">56dp</dimen>
+    <dimen name="dim_25">25dp</dimen>
+    <dimen name="dim_20">20dp</dimen>
+    <dimen name="dim_180">180dp</dimen>
+    <dimen name="dim_60">60dp</dimen>
+    <dimen name="dim_100">100dp</dimen>
+    <dimen name="dim_274">274dp</dimen>
+    <dimen name="dim_5">5dp</dimen>
+
+    <dimen name="font_size_10">10sp</dimen>
+    <dimen name="font_size_45">45sp</dimen>
+    <dimen name="font_size_22">22sp</dimen>
+    <dimen name="font_size_30">30sp</dimen>
+
+</resources>
